@@ -14,6 +14,7 @@ const API_URL = 'https://restcountries.com/v3.1';
 export class CountryService {
   private _http = inject(HttpClient);
   private queryCacheCapital = new Map<string, Country[]>();
+  private queryCacheCountry = new Map<string, Country[]>();
 
   searchByCapital(query: string): Observable<Country[]> {
     query = query.toLowerCase();
@@ -38,8 +39,13 @@ export class CountryService {
   searchByCountry(query: string): Observable<Country[]> {
     query = query.toLowerCase();
 
+    if (this.queryCacheCountry.has(query)) {
+      return of(this.queryCacheCountry.get(query) ?? []);
+    }
+
     return this._http.get<RESTCountry[]>(`${API_URL}/name/${query}`).pipe(
       map((resp) => CountryMapper.mapRestCountryArrayToCountryArray(resp)),
+      tap((countries) => this.queryCacheCountry.set(query, countries)),
       delay(2000),
       catchError((error) => {
         console.log('Error fecthing ', error);
