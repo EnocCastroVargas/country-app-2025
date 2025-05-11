@@ -1,6 +1,7 @@
-import { Component, inject, resource, signal } from '@angular/core';
+import { Component, inject, linkedSignal, resource, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 import { CountryService } from '../../services/country.service';
 
@@ -14,7 +15,23 @@ import { CountryListComponent } from '../../components/country-list/country-list
 })
 export class ByCapitalPageComponent {
   countryService = inject(CountryService);
-  query = signal('');
+
+  activateRoute = inject(ActivatedRoute);
+  queryParam = this.activateRoute.snapshot.queryParamMap.get('query') ?? '';
+
+  query = linkedSignal(() => this.queryParam);
+
+  countryResource = rxResource({
+    request: () => ({ query: this.query() }),
+    loader: ({ request }) => {
+
+      console.log({query: request.query});
+
+      if (!request.query) return of([]);
+
+      return this.countryService.searchByCapital(request.query);
+    },
+  });
 
   // countryResource = resource({
   //   request: () => ({ query: this.query() }),
@@ -26,15 +43,6 @@ export class ByCapitalPageComponent {
   //     );
   //   },
   // });
-
-  countryResource = rxResource({
-    request: () => ({ query: this.query() }),
-    loader: ({ request }) => {
-      if (!request.query) return of([]);
-
-      return this.countryService.searchByCapital(request.query);
-    },
-  });
 
   // isLoading = signal(false);
   // isError = signal<string | null>(null);
