@@ -23,6 +23,21 @@ export class CountryService {
         console.log('Error fecthing ', error);
 
         return throwError(
+          () => new Error(`No se pudo obtener capitales con ese query ${query}`)
+        );
+      })
+    );
+  }
+
+  searchByCountry(query: string): Observable<Country[]> {
+    query = query.toLowerCase();
+
+    return this._http.get<RESTCountry[]>(`${API_URL}/name/${query}`).pipe(
+      map((resp) => CountryMapper.mapRestCountryArrayToCountryArray(resp)),
+      catchError((error) => {
+        console.log('Error fecthing ', error);
+
+        return throwError(
           () => new Error(`No se pudo obtener países con ese query ${query}`)
         );
       })
